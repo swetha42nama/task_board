@@ -1,4 +1,5 @@
-import React, { useState} from 'react';
+
+import React, { useState } from 'react';
 import './App.css';
 
 const statuses = ['To Do', 'In Progress', 'Done'];
@@ -7,8 +8,9 @@ function App() {
   const [tasks, setTasks] = useState([]);
   const [newTask, setNewTask] = useState({ title: '', description: '', status: 'To Do' });
   const [draggedTaskId, setDraggedTaskId] = useState(null);
+  const [editTaskId, setEditTaskId] = useState(null);
+  const [editedTask, setEditedTask] = useState({ title: '', description: '', status: '' });
 
-  
   const handleAddTask = () => {
     if (!newTask.title) return;
     const newTaskEntry = {
@@ -17,6 +19,25 @@ function App() {
     };
     setTasks([...tasks, newTaskEntry]);
     setNewTask({ title: '', description: '', status: 'To Do' });
+  };
+
+  const handleDeleteTask = (id) => {
+    const updatedTasks = tasks.filter(task => task.id !== id);
+    setTasks(updatedTasks);
+  };
+
+  const handleEditTask = (task) => {
+    setEditTaskId(task.id);
+    setEditedTask({ title: task.title, description: task.description, status: task.status });
+  };
+
+  const handleUpdateTask = () => {
+    const updatedTasks = tasks.map(task =>
+      task.id === editTaskId ? { ...task, ...editedTask } : task
+    );
+    setTasks(updatedTasks);
+    setEditTaskId(null);
+    setEditedTask({ title: '', description: '', status: '' });
   };
 
   const handleDrop = (status) => {
@@ -73,8 +94,39 @@ function App() {
                   draggable
                   onDragStart={() => setDraggedTaskId(task.id)}
                 >
-                  <h3>{task.title}</h3>
-                  <p>{task.description}</p>
+                  {editTaskId === task.id ? (
+                    <>
+                      <input
+                        type="text"
+                        value={editedTask.title}
+                        onChange={(e) => setEditedTask({ ...editedTask, title: e.target.value })}
+                      />
+                      <input
+                        type="text"
+                        value={editedTask.description}
+                        onChange={(e) => setEditedTask({ ...editedTask, description: e.target.value })}
+                      />
+                      <select
+                        value={editedTask.status}
+                        onChange={(e) => setEditedTask({ ...editedTask, status: e.target.value })}
+                      >
+                        {statuses.map(s => (
+                          <option key={s} value={s}>{s}</option>
+                        ))}
+                      </select>
+                      <button onClick={handleUpdateTask}>Update</button>
+                      <button onClick={() => setEditTaskId(null)}>Cancel</button>
+                    </>
+                  ) : (
+                    <>
+                      <h3>{task.title}</h3>
+                      <p>{task.description}</p>
+                      <div className="task-actions">
+                        <button onClick={() => handleEditTask(task)}>Edit</button>
+                        <button onClick={() => handleDeleteTask(task.id)}>Delete</button>
+                      </div>
+                    </>
+                  )}
                 </div>
               ))}
             </div>
